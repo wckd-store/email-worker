@@ -12,12 +12,8 @@ fn main() {
     #[cfg(debug_assertions)]
     dotenv().ok();
 
-    match logger::start_logger(log::LevelFilter::Debug) {
-        Ok(_) => {},
-        Err(err) => {
-            println!("Could not start logger, {:?}", err);
-            return
-        }
+    if let Err(err) = logger::start_logger(log::LevelFilter::Debug) {
+        println!("Could not start logger, {:?}", err);
     }
 
     let amqp_host = env::var("AMQP_HOST");
