@@ -1,14 +1,21 @@
-pub use log::LevelFilter;
+use log::LevelFilter;
 
 use chrono::Local;
 
-use log::SetLoggerError;
 use std::thread::current;
 
 use fern::colors::{Color, ColoredLevelConfig};
 use fern::Dispatch;
 
-pub fn start_logger(level: LevelFilter) -> Result<(), SetLoggerError> {
+use std::env::var;
+use std::str::FromStr;
+
+const DEFAULT_LEVEL: LevelFilter = LevelFilter::Info;
+
+pub fn start_logger() {
+    let raw_level = var("LOG_LEVEL").unwrap_or(DEFAULT_LEVEL.to_string());
+    let level = LevelFilter::from_str(raw_level.as_str()).unwrap_or(DEFAULT_LEVEL);
+
     let colors = ColoredLevelConfig::new()
                 .trace(Color::BrightBlack)
                 .debug(Color::Cyan)
@@ -16,8 +23,8 @@ pub fn start_logger(level: LevelFilter) -> Result<(), SetLoggerError> {
                 .warn(Color::Yellow)
                 .error(Color::Red);
 
-    Dispatch::new()
-        .format(move |out, message, record| {
+    let logger_result = Dispatch::new()
+        .format(move | out, message, record | {
             out.finish(format_args!(
                 "[{}] {:<5} from \x1B[{}m{}, {}\x1B[0m: {}",
                 
@@ -33,11 +40,12 @@ pub fn start_logger(level: LevelFilter) -> Result<(), SetLoggerError> {
         })
 
         .level(level)
-        .level_for("mio", log::LevelFilter::Warn)
 
         .chain(std::io::stdout())
 
-        .apply()?;
+        .apply();
 
-    Ok(())
+    if let Err(err) = logger_result {
+        error!("Could not register Fern as logger, falling back to default implementation, {:?}", err)
+    }
 }
