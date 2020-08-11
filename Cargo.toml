@@ -10,7 +10,8 @@ edition = "2018"
 
 # Logging
 log = "0.4.11"
-fern = "0.6.0"
+fern = { version = "0.6.0", features = ["colored"] }
+chrono = "0.4.13"
 
 # AMQP Client
 lapin = "1.2.1"
