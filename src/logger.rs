@@ -13,8 +13,13 @@ use std::str::FromStr;
 const DEFAULT_LEVEL: LevelFilter = LevelFilter::Info;
 
 pub fn start_logger() {
-    let raw_level = var("LOG_LEVEL").unwrap_or(DEFAULT_LEVEL.to_string());
-    let level = LevelFilter::from_str(raw_level.as_str()).unwrap_or(DEFAULT_LEVEL);
+    let level: LevelFilter;
+
+    if let Ok(value) = var("LOG_LEVEL") {
+        level = LevelFilter::from_str(&value).unwrap_or(DEFAULT_LEVEL);
+    } else {
+        level = DEFAULT_LEVEL
+    }
 
     let colors = ColoredLevelConfig::new()
                 .trace(Color::BrightBlack)

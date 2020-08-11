@@ -8,7 +8,12 @@ use dotenv::dotenv;
 
 use std::env;
 
-fn main() {
+use lapin::{
+    Connection, ConnectionProperties, Result
+};
+
+#[tokio::main]
+async fn main() -> Result<()> {
     #[cfg(debug_assertions)]
     dotenv().ok();
 
@@ -16,9 +21,16 @@ fn main() {
 
     let amqp_host = env::var("AMQP_HOST");
 
-    if let Ok(value) = amqp_host {
-        info!("AMQP Host: {}", value);        
-    } else {
-        return
+    if amqp_host.is_err() {
+        warn!("Could not find AMQP_HOST variable, falling back to local connection")
     }
+
+    let amqp_host = amqp_host.unwrap_or("amqp://127.0.0.1:5672/".into());
+
+    let connection = Connection::connect(
+        &amqp_host, 
+        ConnectionProperties::default()
+    ).await?;
+
+    Ok(())
 }
