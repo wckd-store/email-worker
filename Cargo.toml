@@ -7,8 +7,19 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-lapin = "1.2.1"
+
+# Logging
+log = "0.4.11"
 fern = "0.6.0"
 
+# AMQP Client
+lapin = "1.2.1"
+
+# Email Client
 lettre = "0.9.3"
 lettre_email = "0.9.4"
+
+[target.'cfg(debug_assertions)'.dependencies]
+
+# .env support for debug environments
+dotenv = "0.15.0"
