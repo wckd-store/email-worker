@@ -12,6 +12,8 @@ fn main() {
     #[cfg(debug_assertions)]
     dotenv().ok();
 
+    logger::start_logger();
+
     let amqp_host = env::var("AMQP_HOST");
 
     if let Ok(value) = amqp_host {
