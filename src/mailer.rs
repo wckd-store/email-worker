@@ -17,11 +17,20 @@ use std::sync::Mutex;
 lazy_static! {
 
     static ref MAILER: Mutex<SmtpTransport> = {
-        let address = var("SMTP_SERVER").unwrap_or("smtp.mailtrap.io".into());
+        let address = var("SMTP_SERVER").unwrap_or_else(|_| {
+            warn!("Could not find SMTP_SERVER variable, falling back to development server");
+            "smtp.mailtrap.io".into()
+        });
 
         let credentials = Credentials::new(
-            var("SMTP_USERNAME").unwrap(), 
-            var("SMTP_PASSWORD").unwrap()
+            var("SMTP_USERNAME").unwrap_or_else(|_| {
+                warn!("Could not find SMTP_USERNAME variable, falling back to default username");
+                "username".into()
+            }), 
+            var("SMTP_PASSWORD").unwrap_or_else(|_| {
+                warn!("Could not find SMTP_PASSWORD variable, falling back to default password");
+                "password".into()
+            })
         );
 
         let tls = TlsConnector::builder()
