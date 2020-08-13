@@ -23,6 +23,8 @@ lettre_email = "0.9.4"
 
 # Misc
 tokio = { version = "0.2.22", features = ["macros", "io-util"] }
+lazy_static = "1.4.0"
+native-tls = "0.2.4"
 
 [target.'cfg(debug_assertions)'.dependencies]
 

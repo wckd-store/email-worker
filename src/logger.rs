@@ -12,7 +12,7 @@ use std::str::FromStr;
 
 const DEFAULT_LEVEL: LevelFilter = LevelFilter::Info;
 
-pub fn start_logger() {
+pub fn init() {
     let level: LevelFilter;
 
     if let Ok(value) = var("LOG_LEVEL") {
@@ -28,7 +28,7 @@ pub fn start_logger() {
                 .warn(Color::Yellow)
                 .error(Color::Red);
 
-    let logger_result = Dispatch::new()
+    Dispatch::new()
         .format(move | out, message, record | {
             out.finish(format_args!(
                 "[{}] {:<5} from \x1B[{}m{}, {}\x1B[0m: {}",
@@ -48,9 +48,8 @@ pub fn start_logger() {
 
         .chain(std::io::stdout())
 
-        .apply();
-
-    if let Err(err) = logger_result {
-        error!("Could not register Fern as logger, falling back to default implementation, {:?}", err)
-    }
+        .apply()
+        .unwrap_or_else(| err | {
+            error!("Could not register Fern as logger, falling back to default implementation, {:?}", err)
+        });
 }
