@@ -22,8 +22,10 @@ lazy_static! {
 
 }
 
-pub async fn setup_qos(channel: &Channel) -> Result<()> {
-    channel.basic_qos(*MESSAGES_PER_CONSUMER, BasicQosOptions::default()).await
+pub async fn setup_qos(channel: &Channel) -> Result<()> {    channel.basic_qos(
+        *MESSAGES_PER_CONSUMER, 
+        BasicQosOptions::default()
+    ).await
 }
 
 pub async fn declare_queue(queue: &str, channel: &Channel) -> Result<Queue> {
@@ -35,14 +37,12 @@ pub async fn declare_queue(queue: &str, channel: &Channel) -> Result<Queue> {
 }
 
 pub async fn create_consumer(queue: &str, id: &str, channel: &Channel) -> Result<Consumer> {
-    let options = BasicConsumeOptions {
-        no_local: false,
-        no_ack: false,
-        exclusive: false,
-        nowait: false
-    };
-    
-    channel.basic_consume(queue, id, options, FieldTable::default()).await
+    channel.basic_consume(
+        queue, 
+        id, 
+        BasicConsumeOptions::default(), 
+        FieldTable::default()
+    ).await
 }
 
 pub async fn setup_listener(consumer: Consumer) {
