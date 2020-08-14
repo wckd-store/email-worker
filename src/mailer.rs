@@ -1,22 +1,19 @@
 use lettre::smtp::authentication::{Credentials, Mechanism};
 use lettre::smtp::client::net::ClientTlsParameters;
 
-use lettre::smtp::extension::ClientId;
-use lettre::smtp::ConnectionReuseParameters;
+use lettre::smtp::{ConnectionReuseParameters, response::Response};
 
 use lettre::{Transport, SmtpClient, ClientSecurity, SmtpTransport};
 
 use lettre_email::Email;
-
-use native_tls::{Protocol, TlsConnector};
-
-use std::env::var;
 
 use std::sync::Mutex;
 
 lazy_static! {
 
     static ref MAILER: Mutex<SmtpTransport> = {
+        use std::env::var;
+
         let address = var("SMTP_SERVER").unwrap_or_else(|_| {
             warn!("Could not find SMTP_SERVER variable, falling back to development server");
             "smtp.mailtrap.io".into()
@@ -32,6 +29,8 @@ lazy_static! {
                 "password".into()
             })
         );
+
+        use native_tls::{Protocol, TlsConnector};
 
         let tls = TlsConnector::builder()
                 .min_protocol_version(Some(Protocol::Tlsv10))
@@ -55,19 +54,18 @@ lazy_static! {
 
 }
 
-pub fn send_mail() {
+pub fn send_mail(body: String) -> Result<Response, Box<dyn std::error::Error>> {
     let email = Email::builder()
-            .from("")
-            .to("")
-            .body("")
-            .build()
-            .unwrap();
+            .from("no-reply@wckd.store")
+            .to("customer@domain.tld")
+            .body(body)
+            .build()?;
 
     let mut mailer = MAILER.lock().unwrap();
 
-    if let Err(err) = mailer.send(email.into()) {
-        error!("{:?}", err)
-    }
-    
+    let result = mailer.send(email.into())?;
+
     mailer.close();
+
+    Ok(result)
 }
