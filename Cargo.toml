@@ -22,7 +22,7 @@ lettre = "0.9.3"
 lettre_email = "0.9.4"
 
 # Misc
-tokio = { version = "0.2.22", features = ["macros", "io-util"] }
+tokio = { version = "0.2.22", features = ["macros"] }
 lazy_static = "1.4.0"
 native-tls = "0.2.4"
 
