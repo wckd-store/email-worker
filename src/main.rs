@@ -3,71 +3,56 @@ mod logger;
 mod queue_processor;
 mod mailer;
 
+mod config;
+
 #[macro_use]
 extern crate log;
 
 #[macro_use]
 extern crate lazy_static;
 
-use std::env::var;
+#[macro_use]
+extern crate serde;
 
 use tokio_amqp::LapinTokioExt;
 use lapin::{
-    Connection, ConnectionProperties, Result
+    Connection, ConnectionProperties, Result as LapinResult
 };
 
 use queue_processor::{setup_qos, declare_queue, create_consumer, setup_listener};
 
 lazy_static! {
     
-    static ref ID: String = {
-        var("ID").unwrap_or_else(|_| {
-            warn!("Could not find ID variable, falling back to development id");
-            "dev-0".into()
-        })
-    };
+    pub static ref CONFIG: config::Config = {
+        #[cfg(debug_assertions)] // .env support for debug environments
+        dotenv::dotenv().ok();
 
-    static ref AMQP_HOST: String = {
-        var("AMQP_HOST").unwrap_or_else(|_| {
-            warn!("Could not find AMQP_HOST variable, falling back to local connection");
-            "amqp://127.0.0.1:5672/%2f".into()
-        })
-    };
-
-    static ref QUEUE: String = {
-        var("QUEUE").unwrap_or_else(|_| {
-            warn!("Could not find QUEUE variable, falling back to default queue");
-            "emails".into()
-        })
+        envy::from_env::<config::Config>().expect("Could not load environment variables")
     };
 
 }
 
 #[tokio::main]
-async fn main() -> Result<()> {
-    // .env support for debug environments
-    #[cfg(debug_assertions)]
-    dotenv::dotenv().ok();
-
+async fn main() -> LapinResult<()> {
     logger::init();
 
+    mailer::list_templates();
+
     let connection = Connection::connect(
-        &AMQP_HOST, 
+        &CONFIG.amqp_host, 
         ConnectionProperties::default().with_tokio()
     ).await?;
 
     let channel = connection.create_channel().await?;
 
     setup_qos(&channel).await?;
-    declare_queue(&QUEUE, &channel).await?;
+    declare_queue(&CONFIG.queue, &channel).await?;
 
-    setup_listener(
-        create_consumer(
-            &QUEUE, 
-            &ID,
-            &channel
-        ).await?
-    ).await;
+    setup_listener(create_consumer(
+        &CONFIG.queue, 
+        &CONFIG.id,
+        &channel
+    ).await?).await;
 
     connection.close(320, "Shutdown").await?;
 
