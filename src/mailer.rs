@@ -140,6 +140,7 @@ impl JsonEmail {
 
         match TEMPLATES_MAP.get(&template) {
             Some(body) => {
+
                 match &self.placeholders {
                     Some(placeholders) => {
                         let mut body = body.clone();
@@ -156,6 +157,7 @@ impl JsonEmail {
                 }
                 
                 builder = builder.html(body.as_str());
+                
             },
 
             None => return create_error("Invalid template")

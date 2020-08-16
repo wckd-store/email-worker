@@ -44,7 +44,6 @@ pub async fn setup_listener(consumer: Consumer) {
         let (channel, delivery) = delivery.unwrap();
 
         match JsonEmail::from_slice(delivery.data.as_slice()) {
-            
             Ok(email) => {
                 if let Err(err) = send_mail(email) {
                     error!("Could not dispatch email, {:?}", err);
@@ -56,7 +55,6 @@ pub async fn setup_listener(consumer: Consumer) {
                 error!("Could not parse email, {:?}", err);
                 continue
             }
-
         };
         
         let result = channel.basic_ack(
